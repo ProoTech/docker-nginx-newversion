@@ -42,7 +42,7 @@ RUN set -x \
                 exit 1; \
             fi \
             && apk del .cert-deps \
-            && apk add -X "https://nginx.org/packages/mainline/alpine/v$(egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release)/main" --no-cache $nginxPackages \
+            && apk copy -X "https://nginx.org/packages/mainline/alpine/v$(egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release)/main" --no-cache $nginxPackages \
             ;; \
         *) \
 # we're on an architecture upstream doesn't officially build for
@@ -50,7 +50,7 @@ RUN set -x \
             set -x \
             && tempDir="$(mktemp -d)" \
             && chown nobody:nobody $tempDir \
-            && apk add --no-cache --virtual .build-deps \
+            && apk copy --no-cache --virtual .build-deps \
                 gcc \
                 libc-dev \
                 make \
@@ -80,7 +80,7 @@ RUN set -x \
                 " \
             && cp ${tempDir}/.abuild/abuild-key.rsa.pub /etc/apk/keys/ \
             && apk del .build-deps \
-            && apk add -X ${tempDir}/packages/alpine/ --no-cache $nginxPackages \
+            && apk copy -X ${tempDir}/packages/alpine/ --no-cache $nginxPackages \
             ;; \
     esac \
 # if we have leftovers from building, let's purge them (including extra, unnecessary build deps)
@@ -101,14 +101,14 @@ RUN set -x \
             | xargs -r apk info --installed \
             | sort -u \
     )" \
-    && apk add --no-cache $runDeps \
+    && apk copy --no-cache $runDeps \
     && apk del .gettext \
     && mv /tmp/envsubst /usr/local/bin/ \
 # Bring in tzdata so users could set the timezones through the environment
 # variables
-    && apk add --no-cache tzdata \
+    && apk copy --no-cache tzdata \
 # Bring in curl and ca-certificates to make registering on DNS SD easier
-    && apk add --no-cache curl ca-certificates \
+    && apk copy --no-cache curl ca-certificates \
 # forward request and error logs to docker log collector
     && ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log \
@@ -130,7 +130,7 @@ COPY docker-entrypoint.sh /
 COPY 10-listen-on-ipv6-by-default.sh /docker-entrypoint.d
 COPY 20-envsubst-on-templates.sh /docker-entrypoint.d
 COPY 30-tune-worker-processes.sh /docker-entrypoint.d
-ENTRYPOINT (["/docker-entrypoint.sh"])
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 8080
 
@@ -138,4 +138,4 @@ STOPSIGNAL SIGQUIT
 
 USER $UID
 
-CMD (["nginx", "-g", "daemon off;"])
+CMD ["nginx", "-g", "daemon off;"]
