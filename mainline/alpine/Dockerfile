@@ -42,7 +42,7 @@ RUN set -x \
                 exit 1; \
             fi \
             && apk del .cert-deps \
-            && apk copy -X "https://nginx.org/packages/mainline/alpine/v$(egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release)/main" --no-cache $nginxPackages \
+            && apk curl -X "https://nginx.org/packages/mainline/alpine/v$(egrep -o '^[0-9]+\.[0-9]+' /etc/alpine-release)/main" --no-cache $nginxPackages \
             ;; \
         *) \
 # we're on an architecture upstream doesn't officially build for
@@ -50,7 +50,7 @@ RUN set -x \
             set -x \
             && tempDir="$(mktemp -d)" \
             && chown nobody:nobody $tempDir \
-            && apk copy --no-cache --virtual .build-deps \
+            && apk add --no-cache --virtual .build-deps \
                 gcc \
                 libc-dev \
                 make \
@@ -80,7 +80,7 @@ RUN set -x \
                 " \
             && cp ${tempDir}/.abuild/abuild-key.rsa.pub /etc/apk/keys/ \
             && apk del .build-deps \
-            && apk copy -X ${tempDir}/packages/alpine/ --no-cache $nginxPackages \
+            && apk add -X ${tempDir}/packages/alpine/ --no-cache $nginxPackages \
             ;; \
     esac \
 # if we have leftovers from building, let's purge them (including extra, unnecessary build deps)
@@ -91,7 +91,7 @@ RUN set -x \
 # the rest away. To do this, we need to install `gettext`
 # then move `envsubst` out of the way so `gettext` can
 # be deleted completely, then move `envsubst` back.
-    && apk copy --no-cache --virtual .gettext gettext \
+    && apk add --no-cache --virtual .gettext gettext \
     && mv /usr/bin/envsubst /tmp/ \
     \
     && runDeps="$( \
@@ -101,14 +101,14 @@ RUN set -x \
             | xargs -r apk info --installed \
             | sort -u \
     )" \
-    && apk copy --no-cache $runDeps \
+    && apk add --no-cache $runDeps \
     && apk del .gettext \
     && mv /tmp/envsubst /usr/local/bin/ \
 # Bring in tzdata so users could set the timezones through the environment
 # variables
-    && apk copy --no-cache tzdata \
+    && apk add --no-cache tzdata \
 # Bring in curl and ca-certificates to make registering on DNS SD easier
-    && apk copy --no-cache curl ca-certificates \
+    && apk add --no-cache curl ca-certificates \
 # forward request and error logs to docker log collector
     && ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log \
