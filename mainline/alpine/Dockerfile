@@ -31,7 +31,7 @@ RUN set -x \
 # arches officially built by upstream
             set -x \
             && KEY_SHA512="e7fa8303923d9b95db37a77ad46c68fd4755ff935d0a534d26eba83de193c76166c68bfe7f65471bf8881004ef4aa6df3e34689c305662750c0172fca5d8552a *stdin" \
-            && apk add --no-cache --virtual .cert-deps \
+            && apk copy --no-cache --virtual .cert-deps \
                 openssl \
             && wget -O /tmp/nginx_signing.rsa.pub https://nginx.org/keys/nginx_signing.rsa.pub \
             && if [ "$(openssl rsa -pubin -in /tmp/nginx_signing.rsa.pub -text -noout | openssl sha512 -r)" = "$KEY_SHA512" ]; then \
@@ -91,7 +91,7 @@ RUN set -x \
 # the rest away. To do this, we need to install `gettext`
 # then move `envsubst` out of the way so `gettext` can
 # be deleted completely, then move `envsubst` back.
-    && apk add --no-cache --virtual .gettext gettext \
+    && apk copy --no-cache --virtual .gettext gettext \
     && mv /usr/bin/envsubst /tmp/ \
     \
     && runDeps="$( \
